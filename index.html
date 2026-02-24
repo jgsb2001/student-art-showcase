@@ -1,0 +1,546 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Student Art Showcase — Digital Media Arts</title>
+    <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@300;400;700;900&display=swap" rel="stylesheet">
+    <style>
+        *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+        :root {
+            --cyan:   #00d4ff;
+            --pink:   #ff006e;
+            --yellow: #ffbe0b;
+            --green:  #00ff88;
+            --bg:     #09090f;
+        }
+
+        body {
+            background: var(--bg);
+            color: #fff;
+            font-family: 'Inter', sans-serif;
+            overflow: hidden;
+            width: 100vw;
+            height: 100vh;
+            user-select: none;
+        }
+
+        /* ── SCANLINES overlay ── */
+        #scanlines {
+            position: fixed; inset: 0; pointer-events: none; z-index: 90;
+            background: repeating-linear-gradient(
+                0deg, transparent, transparent 2px,
+                rgba(0,0,0,0.04) 2px, rgba(0,0,0,0.04) 4px
+            );
+        }
+
+        /* ── SLIDESHOW container ── */
+        #slideshow {
+            position: relative;
+            width: 100%; height: 100%;
+            overflow: hidden;
+        }
+
+        /* ── BASE SLIDE ── */
+        .slide {
+            position: absolute; inset: 0;
+            display: flex; align-items: center; justify-content: center;
+            opacity: 0;
+            pointer-events: none;
+            will-change: opacity;
+        }
+        .slide.active { opacity: 1; pointer-events: all; }
+
+        /* ── ANIMATED GRID background ── */
+        .grid-bg {
+            position: absolute; inset: 0;
+            background-image:
+                linear-gradient(rgba(0,212,255,0.06) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(0,212,255,0.06) 1px, transparent 1px);
+            background-size: 64px 64px;
+        }
+
+        /* ── GLOW ORBS ── */
+        .orb {
+            position: absolute; border-radius: 50%;
+            filter: blur(90px); opacity: 0.25; pointer-events: none;
+        }
+        .orb-cyan  { width: 550px; height: 550px; background: var(--cyan);  top: -160px; left: -160px; }
+        .orb-pink  { width: 450px; height: 450px; background: var(--pink);  bottom: -120px; right: -120px; }
+        .orb-yellow{ width: 350px; height: 350px; background: var(--yellow); top: 50%; left: 50%; transform: translate(-50%,-50%); opacity: 0.12; }
+
+        /* ══ TITLE SLIDE ══ */
+        .slide-title { background: linear-gradient(135deg, #09090f 0%, #150a2e 55%, #091a2e 100%); }
+        .slide-title .inner { text-align: center; position: relative; z-index: 2; padding: 40px; }
+        .slide-title .pre {
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: clamp(0.9rem, 1.8vw, 1.4rem);
+            letter-spacing: 10px; color: var(--cyan); margin-bottom: 14px; opacity: 0.85;
+        }
+        .slide-title h1 {
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: clamp(5rem, 13vw, 13rem);
+            line-height: 0.88; letter-spacing: 4px;
+            background: linear-gradient(135deg, #fff 0%, var(--cyan) 50%, var(--pink) 100%);
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+            background-clip: text;
+            white-space: pre-line;
+        }
+        .slide-title .tagline {
+            margin-top: 28px;
+            font-size: clamp(0.85rem, 1.5vw, 1.2rem);
+            font-weight: 300; letter-spacing: 7px;
+            color: rgba(255,255,255,0.45); text-transform: uppercase;
+        }
+        .slide-title .start-hint {
+            margin-top: 48px;
+            font-size: 0.75rem; letter-spacing: 5px;
+            color: rgba(255,255,255,0.2); text-transform: uppercase;
+            animation: blink 2s ease-in-out infinite;
+        }
+
+        /* ══ SECTION SLIDE ══ */
+        .slide-section { background: linear-gradient(135deg, #09090f 0%, #0f1a09 55%, #090f1a 100%); }
+        .slide-section .inner { text-align: center; position: relative; z-index: 2; padding: 40px; }
+        .slide-section .label {
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: clamp(0.8rem, 1.5vw, 1.1rem);
+            letter-spacing: 10px; color: var(--yellow); margin-bottom: 10px;
+        }
+        .slide-section h2 {
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: clamp(4rem, 11vw, 11rem);
+            line-height: 0.88; letter-spacing: 3px;
+            background: linear-gradient(135deg, #fff 20%, var(--yellow) 100%);
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+            background-clip: text;
+            white-space: pre-line;
+        }
+        .slide-section .section-sub {
+            margin-top: 22px;
+            font-size: clamp(0.85rem, 1.6vw, 1.3rem);
+            font-weight: 700; letter-spacing: 7px; color: var(--cyan);
+            text-transform: uppercase;
+        }
+
+        /* ══ SUB-SECTION SLIDE ══ */
+        .slide-subsection { background: var(--bg); }
+        .slide-subsection .inner { text-align: center; position: relative; z-index: 2; padding: 40px; }
+        .slide-subsection .bar {
+            width: 80px; height: 5px;
+            background: linear-gradient(90deg, var(--cyan), var(--pink));
+            margin: 0 auto 24px; border-radius: 3px;
+        }
+        .slide-subsection h3 {
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: clamp(3rem, 8vw, 8rem);
+            letter-spacing: 4px; color: #fff;
+        }
+        .slide-subsection .sec-name {
+            margin-top: 16px;
+            font-size: 0.8rem; letter-spacing: 6px;
+            color: rgba(255,255,255,0.3); text-transform: uppercase;
+        }
+
+        /* ══ IMAGE SLIDE ══ */
+        .slide-image { background: #000; }
+        .slide-image img {
+            max-width: 100vw; max-height: 100vh;
+            object-fit: contain; display: block;
+            position: relative; z-index: 1;
+        }
+        .badge {
+            position: absolute; top: 28px; left: 28px;
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: clamp(1.6rem, 3.5vw, 3rem);
+            letter-spacing: 5px; padding: 6px 22px;
+            border-radius: 4px; z-index: 10;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+        }
+        .badge-before { background: var(--pink);  color: #fff; }
+        .badge-after  { background: var(--green); color: #000; }
+
+        /* ══ ANIMATIONS ══ */
+        @keyframes fadeIn      { from { opacity: 0 } to { opacity: 1 } }
+        @keyframes zoomIn      { from { transform: scale(1.12); opacity: 0 } to { transform: scale(1); opacity: 1 } }
+        @keyframes slideRight  { from { transform: translateX(80px); opacity: 0 } to { transform: translateX(0); opacity: 1 } }
+        @keyframes slideLeft   { from { transform: translateX(-80px); opacity: 0 } to { transform: translateX(0); opacity: 1 } }
+        @keyframes slideUp     { from { transform: translateY(50px); opacity: 0 } to { transform: translateY(0); opacity: 1 } }
+        @keyframes blink       { 0%,100% { opacity: 0.2 } 50% { opacity: 0.6 } }
+        @keyframes pulseBar    {
+            0%,100% { box-shadow: 0 0 8px var(--cyan) }
+            50%     { box-shadow: 0 0 20px var(--cyan), 0 0 40px var(--pink) }
+        }
+
+        /* Animation classes applied by JS */
+        .anim-zoom    img { animation: zoomIn     0.55s cubic-bezier(0.25,0.46,0.45,0.94) both }
+        .anim-right   img { animation: slideRight 0.45s cubic-bezier(0.25,0.46,0.45,0.94) both }
+        .anim-left    img { animation: slideLeft  0.45s cubic-bezier(0.25,0.46,0.45,0.94) both }
+        .anim-text  .inner { animation: slideUp   0.6s  cubic-bezier(0.25,0.46,0.45,0.94) both }
+        .anim-fade  .inner { animation: fadeIn    0.5s  ease both }
+
+        /* ══ CHROME / UI ══ */
+        #progress-bar {
+            position: fixed; bottom: 0; left: 0; height: 4px;
+            background: linear-gradient(90deg, var(--cyan), var(--pink));
+            z-index: 100; transition: width 0.25s ease;
+            animation: pulseBar 3s ease-in-out infinite;
+        }
+
+        #slide-counter {
+            position: fixed; bottom: 18px; right: 20px;
+            font-size: 0.72rem; font-weight: 700; letter-spacing: 4px;
+            color: rgba(255,255,255,0.25); z-index: 100;
+        }
+
+        #section-indicator {
+            position: fixed; top: 18px; left: 50%; transform: translateX(-50%);
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: 0.85rem; letter-spacing: 7px;
+            color: rgba(255,255,255,0.2); z-index: 100; pointer-events: none;
+            text-transform: uppercase; white-space: nowrap;
+        }
+
+        .nav-btn {
+            position: fixed; top: 50%; transform: translateY(-50%);
+            width: 56px; height: 56px; border-radius: 50%;
+            background: rgba(255,255,255,0.07);
+            border: 1px solid rgba(255,255,255,0.13);
+            color: #fff; font-size: 1.4rem; cursor: pointer;
+            z-index: 100; display: flex; align-items: center; justify-content: center;
+            backdrop-filter: blur(12px);
+            transition: background 0.2s, border-color 0.2s, transform 0.2s;
+        }
+        .nav-btn:hover {
+            background: rgba(0,212,255,0.18); border-color: var(--cyan);
+            transform: translateY(-50%) scale(1.12);
+        }
+        #prev-btn { left: 18px; }
+        #next-btn { right: 18px; }
+
+        .ctrl-btn {
+            position: fixed; bottom: 14px;
+            width: 38px; height: 38px; border-radius: 50%;
+            background: rgba(255,255,255,0.07);
+            border: 1px solid rgba(255,255,255,0.13);
+            color: #fff; font-size: 0.85rem; cursor: pointer;
+            z-index: 100; display: flex; align-items: center; justify-content: center;
+            backdrop-filter: blur(12px);
+            transition: background 0.2s, border-color 0.2s;
+        }
+        .ctrl-btn:hover { background: rgba(0,212,255,0.18); border-color: var(--cyan); }
+        #pause-btn      { left: 16px; }
+        #fullscreen-btn { left: 62px; }
+
+        /* Dot nav */
+        #dot-nav {
+            position: fixed; bottom: 22px; left: 50%; transform: translateX(-50%);
+            display: flex; gap: 6px; z-index: 100;
+        }
+        .dot {
+            width: 6px; height: 6px; border-radius: 50%;
+            background: rgba(255,255,255,0.2); cursor: pointer;
+            transition: background 0.25s, transform 0.25s;
+        }
+        .dot.active { background: var(--cyan); transform: scale(1.5); }
+        .dot.section-dot { background: rgba(255,190,11,0.4); }
+        .dot.section-dot.active { background: var(--yellow); transform: scale(1.5); }
+    </style>
+</head>
+<body>
+
+<div id="scanlines"></div>
+<div id="slideshow"></div>
+
+<button id="prev-btn" class="nav-btn" title="Previous  ←">&#8592;</button>
+<button id="next-btn" class="nav-btn" title="Next  →">&#8594;</button>
+
+<div id="progress-bar"></div>
+<div id="slide-counter"></div>
+<div id="section-indicator"></div>
+<div id="dot-nav"></div>
+
+<button id="pause-btn"      class="ctrl-btn" title="Pause / Play  (Space)">&#9654;</button>
+<button id="fullscreen-btn" class="ctrl-btn" title="Fullscreen  (F)">&#x26F6;</button>
+
+<script>
+// ─── SLIDE DATA ───────────────────────────────────────────────────────────────
+const slides = [
+  // 0 — Title
+  { type:'title', pre:'Welcome to', title:'Student\nArt\nShowcase', tagline:'Digital Media Arts Program' },
+
+  // ── Photoshop section ─────────────────────────────────────────────
+  { type:'section', label:'Section 1', title:'Adobe\nPhotoshop', sub:'Fall 2025', section:'Photoshop' },
+
+  // Before & After
+  { type:'subsection', title:'Before & After', section:'Photoshop — Fall 2025' },
+  { type:'image', src:'_PS_BeforeAfter_People/removePeopleAndBag_BEFORE.png', badge:'BEFORE', badgeType:'before', section:'Photoshop — Fall 2025' },
+  { type:'image', src:'_PS_BeforeAfter_People/removePeopleAndBag_AFTER.png',  badge:'AFTER',  badgeType:'after',  section:'Photoshop — Fall 2025' },
+  { type:'image', src:'_PS_BeforeAfter_Woman/remove_Woman_BEFORE.png',        badge:'BEFORE', badgeType:'before', section:'Photoshop — Fall 2025' },
+  { type:'image', src:'_PS_BeforeAfter_Woman/remove_Woman_AFTER.png',         badge:'AFTER',  badgeType:'after',  section:'Photoshop — Fall 2025' },
+
+  // Homecoming Dance Posters
+  { type:'subsection', title:'Homecoming Dance Posters', section:'Photoshop — Fall 2025' },
+  { type:'image', src:'_PS_Dance/HomecomingDancePoster_EXAMPLE 2_REVISED.png',           section:'Photoshop — Fall 2025' },
+  { type:'image', src:'_PS_Dance/ChristianAmado_P1_HOCO.png',                            section:'Photoshop — Fall 2025' },
+  { type:'image', src:'_PS_Dance/Hoco_jimmyMorales_P3.png',                              section:'Photoshop — Fall 2025' },
+  { type:'image', src:'_PS_Dance/Home coing danceOmar_p_6.png',                          section:'Photoshop — Fall 2025' },
+  { type:'image', src:'_PS_Dance/Homecoming DanceJPatino_P.7.png',                       section:'Photoshop — Fall 2025' },
+  { type:'image', src:'_PS_Dance/HomecomingDancePoster_P3_VCedillo (1) (1).png',         section:'Photoshop — Fall 2025' },
+  { type:'image', src:'_PS_Dance/HomecomingDancePoster_P4_ALeon.png',                    section:'Photoshop — Fall 2025' },
+  { type:'image', src:'_PS_Dance/Homecoming_p7_JRosales.png',                            section:'Photoshop — Fall 2025' },
+  { type:'image', src:'_PS_Dance/homecomimngdance_p6_harveyj.png',                       section:'Photoshop — Fall 2025' },
+  { type:'image', src:'_PS_Dance/homecoming-dance_andrewvasquez.png',                    section:'Photoshop — Fall 2025' },
+  { type:'image', src:'_PS_Dance/homecomingdanceposter_p3_llopez (1).png',               section:'Photoshop — Fall 2025' },
+
+  // Football Game Posters
+  { type:'subsection', title:'Football Game Posters', section:'Photoshop — Fall 2025' },
+  { type:'image', src:'_PS_FootballGame/footballposter_p6_2_EXAMPLE.jpg',                      section:'Photoshop — Fall 2025' },
+  { type:'image', src:'_PS_FootballGame/HocoFootballgame_P4_JAlbarran.jpg',                    section:'Photoshop — Fall 2025' },
+  { type:'image', src:'_PS_FootballGame/Hoco_Game_ChristianA_P1.jpg',                          section:'Photoshop — Fall 2025' },
+  { type:'image', src:'_PS_FootballGame/Homcomingfballgame_p4_AGarcia.jpg',                    section:'Photoshop — Fall 2025' },
+  { type:'image', src:'_PS_FootballGame/Homecoming Football Game Poster_p1_AGarcia.jpg',       section:'Photoshop — Fall 2025' },
+  { type:'image', src:'_PS_FootballGame/HomecomingFootballGamePoster_p3_Vgomez.jpg',           section:'Photoshop — Fall 2025' },
+  { type:'image', src:'_PS_FootballGame/p3_YanetAndDiego_LARGE.jpg',                           section:'Photoshop — Fall 2025' },
+
+  // Postage Stamps
+  { type:'subsection', title:'Postage Stamps', section:'Photoshop — Fall 2025' },
+  { type:'image', src:'_PS_Stamps/Stamp_p1_EXAMPLE_SidneyHillman.jpg',    section:'Photoshop — Fall 2025' },
+  { type:'image', src:'_PS_Stamps/Stamp_p3_EXAMPLE_EllenGatesStarr.jpg',  section:'Photoshop — Fall 2025' },
+  { type:'image', src:'_PS_Stamps/Stamp_p3_Pdelgado.jpg',                 section:'Photoshop — Fall 2025' },
+  { type:'image', src:'_PS_Stamps/Stamp_p4_EXAMPLE_CrystalLee.jpg',       section:'Photoshop — Fall 2025' },
+  { type:'image', src:'_PS_Stamps/Stamp_p7_JGibson.jpg',                  section:'Photoshop — Fall 2025' },
+  { type:'image', src:'_PS_Stamps/Stamp_p7_JPatino.jpg',                  section:'Photoshop — Fall 2025' },
+
+  // Creative Projects (Standalones)
+  { type:'subsection', title:'Creative Projects', section:'Photoshop — Fall 2025' },
+  { type:'image', src:'_PS_Standalones/GOTGPoster_MAlamilla.png',  section:'Photoshop — Fall 2025' },
+  { type:'image', src:'_PS_Standalones/SoccerGoal_Samin.png',      section:'Photoshop — Fall 2025' },
+  { type:'image', src:'_PS_Standalones/TribalHands_EXAMPLE.png',   section:'Photoshop — Fall 2025' },
+
+  // ── Illustrator section ───────────────────────────────────────────
+  { type:'section', label:'Section 2', title:'Adobe\nIllustrator', sub:'Spring 2025', section:'Illustrator' },
+  { type:'image', src:'_Illustrator/Ex1- Boxes _diegobravo_p3.png',                         section:'Illustrator — Spring 2025' },
+  { type:'image', src:'_Illustrator/Ex2_circles_EGarcia_P3.png',                            section:'Illustrator — Spring 2025' },
+  { type:'image', src:'_Illustrator/Ex3_trophy_JArredondo.png',                             section:'Illustrator — Spring 2025' },
+  { type:'image', src:'_Illustrator/Ex4_OlympicFlag_Esmeralda.png',                         section:'Illustrator — Spring 2025' },
+  { type:'image', src:'_Illustrator/Ex5_Star_VO.png',                                       section:'Illustrator — Spring 2025' },
+  { type:'image', src:'_Illustrator/Ex6_CompoundShapes_JasonPina.png',                      section:'Illustrator — Spring 2025' },
+  { type:'image', src:'_Illustrator/Ex7_PenTool_StraightLines_Makayla.png',                 section:'Illustrator — Spring 2025' },
+  { type:'image', src:'_Illustrator/Ex8_PenTool_CurvedLines_Jonathan.png',                  section:'Illustrator — Spring 2025' },
+  { type:'image', src:'_Illustrator/Ex9_PentoolPractice_Obi-01.png',                        section:'Illustrator — Spring 2025' },
+  { type:'image', src:'_Illustrator/Ex9_PentoolPractice_Obi-02.png',                        section:'Illustrator — Spring 2025' },
+  { type:'image', src:'_Illustrator/Ex9_PentoolPractice_Obi-03.png',                        section:'Illustrator — Spring 2025' },
+  { type:'image', src:'_Illustrator/PathfinderPractice_ENGLISH_thaily martinez-p3_ai.png',  section:'Illustrator — Spring 2025' },
+  { type:'image', src:'_Illustrator/Tshirt_Design_Fsantana.png',                            section:'Illustrator — Spring 2025' },
+];
+
+// ─── HELPERS ─────────────────────────────────────────────────────────────────
+// Encode only spaces; leave parens and other chars the browser handles natively
+function encodeSrc(path) {
+  return path.replace(/ /g, '%20');
+}
+
+// ─── BUILD DOM ───────────────────────────────────────────────────────────────
+const container = document.getElementById('slideshow');
+
+slides.forEach((s, i) => {
+  const el = document.createElement('div');
+  el.className = 'slide';
+  el.dataset.index = i;
+
+  if (s.type === 'title') {
+    el.classList.add('slide-title');
+    el.innerHTML = `
+      <div class="grid-bg"></div>
+      <div class="orb orb-cyan"></div>
+      <div class="orb orb-pink"></div>
+      <div class="orb orb-yellow"></div>
+      <div class="inner">
+        <div class="pre">${s.pre}</div>
+        <h1>${s.title}</h1>
+        <div class="tagline">${s.tagline}</div>
+        <div class="start-hint">Press → or click the arrow to begin</div>
+      </div>`;
+  } else if (s.type === 'section') {
+    el.classList.add('slide-section');
+    el.innerHTML = `
+      <div class="grid-bg"></div>
+      <div class="orb orb-cyan"></div>
+      <div class="orb orb-pink"></div>
+      <div class="inner">
+        <div class="label">${s.label}</div>
+        <h2>${s.title}</h2>
+        <div class="section-sub">${s.sub}</div>
+      </div>`;
+  } else if (s.type === 'subsection') {
+    el.classList.add('slide-subsection');
+    el.innerHTML = `
+      <div class="grid-bg"></div>
+      <div class="inner">
+        <div class="bar"></div>
+        <h3>${s.title}</h3>
+        <div class="sec-name">${s.section || ''}</div>
+      </div>`;
+  } else if (s.type === 'image') {
+    el.classList.add('slide-image');
+    if (s.badge) {
+      const badge = document.createElement('div');
+      badge.className = `badge badge-${s.badgeType}`;
+      badge.textContent = s.badge;
+      el.appendChild(badge);
+    }
+    const img = document.createElement('img');
+    img.alt   = s.badge || '';
+    img.loading = 'lazy';
+    img.src   = encodeSrc(s.src);   // spaces→%20; browser resolves the rest
+    el.appendChild(img);
+  }
+
+  container.appendChild(el);
+});
+
+// ─── BUILD DOT NAV ───────────────────────────────────────────────────────────
+const dotNav = document.getElementById('dot-nav');
+slides.forEach((s, i) => {
+  const d = document.createElement('div');
+  d.className = 'dot' + (s.type === 'section' ? ' section-dot' : '');
+  d.title = `Slide ${i + 1}`;
+  d.addEventListener('click', () => goTo(i, i > current ? 'right' : 'left'));
+  dotNav.appendChild(d);
+});
+
+// ─── STATE ───────────────────────────────────────────────────────────────────
+let current   = 0;
+let paused    = false;
+let timer     = null;
+const DURATIONS = { title: 4000, section: 3000, subsection: 2800, image: 5000 };
+
+// ─── RENDER SLIDE ────────────────────────────────────────────────────────────
+function goTo(idx, direction = 'right') {
+  if (idx < 0 || idx >= slides.length) return;
+
+  const oldEl = container.querySelector('.slide.active');
+  const newEl = container.children[idx];
+  const s     = slides[idx];
+
+  // Clear previous animation classes
+  if (oldEl) oldEl.classList.remove('active', 'anim-zoom', 'anim-right', 'anim-left', 'anim-text', 'anim-fade');
+
+  // Assign animation
+  let animClass = 'anim-zoom';
+  if (s.type === 'image') {
+    animClass = direction === 'right' ? 'anim-right' : 'anim-left';
+  } else {
+    animClass = 'anim-text';
+  }
+
+  // Re-trigger animation by cloning inner (hack to restart CSS animation)
+  const inner = newEl.querySelector('.inner, img');
+  if (inner) {
+    inner.style.animation = 'none';
+    inner.offsetHeight; // reflow
+    inner.style.animation = '';
+  }
+
+  newEl.classList.remove('anim-zoom', 'anim-right', 'anim-left', 'anim-text', 'anim-fade');
+  newEl.classList.add('active', animClass);
+
+  current = idx;
+  updateUI();
+  scheduleNext();
+}
+
+// ─── UI ──────────────────────────────────────────────────────────────────────
+function updateUI() {
+  // Counter
+  document.getElementById('slide-counter').textContent =
+    `${current + 1}  /  ${slides.length}`;
+
+  // Section indicator
+  const sec = slides[current].section || '';
+  document.getElementById('section-indicator').textContent = sec;
+
+  // Progress bar
+  const pct = ((current + 1) / slides.length) * 100;
+  document.getElementById('progress-bar').style.width = pct + '%';
+
+  // Dots
+  document.querySelectorAll('.dot').forEach((d, i) => {
+    d.classList.toggle('active', i === current);
+  });
+
+  // Pause icon
+  document.getElementById('pause-btn').innerHTML = paused ? '&#9654;' : '&#9646;&#9646;';
+}
+
+// ─── AUTO-ADVANCE ────────────────────────────────────────────────────────────
+function scheduleNext() {
+  clearTimeout(timer);
+  if (paused) return;
+  const delay = DURATIONS[slides[current].type] || 5000;
+  timer = setTimeout(() => {
+    if (current < slides.length - 1) goTo(current + 1, 'right');
+    else goTo(0, 'right');
+  }, delay);
+}
+
+// ─── CONTROLS ────────────────────────────────────────────────────────────────
+document.getElementById('prev-btn').addEventListener('click', () => {
+  if (current > 0) goTo(current - 1, 'left');
+});
+document.getElementById('next-btn').addEventListener('click', () => {
+  if (current < slides.length - 1) goTo(current + 1, 'right');
+  else goTo(0, 'right');
+});
+
+document.getElementById('pause-btn').addEventListener('click', () => {
+  paused = !paused;
+  updateUI();
+  if (!paused) scheduleNext();
+  else clearTimeout(timer);
+});
+
+document.getElementById('fullscreen-btn').addEventListener('click', () => {
+  if (!document.fullscreenElement) document.documentElement.requestFullscreen();
+  else document.exitFullscreen();
+});
+
+document.addEventListener('keydown', e => {
+  switch (e.key) {
+    case 'ArrowRight': case 'ArrowDown':
+      e.preventDefault();
+      if (current < slides.length - 1) goTo(current + 1, 'right');
+      else goTo(0, 'right');
+      break;
+    case 'ArrowLeft': case 'ArrowUp':
+      e.preventDefault();
+      if (current > 0) goTo(current - 1, 'left');
+      break;
+    case ' ':
+      e.preventDefault();
+      document.getElementById('pause-btn').click();
+      break;
+    case 'f': case 'F':
+      document.getElementById('fullscreen-btn').click();
+      break;
+  }
+});
+
+// Touch / swipe support
+let touchStartX = 0;
+document.addEventListener('touchstart', e => { touchStartX = e.touches[0].clientX; }, { passive: true });
+document.addEventListener('touchend', e => {
+  const dx = e.changedTouches[0].clientX - touchStartX;
+  if (Math.abs(dx) > 50) {
+    if (dx < 0) document.getElementById('next-btn').click();
+    else document.getElementById('prev-btn').click();
+  }
+});
+
+// ─── INIT ────────────────────────────────────────────────────────────────────
+goTo(0, 'right');
+</script>
+</body>
+</html>
